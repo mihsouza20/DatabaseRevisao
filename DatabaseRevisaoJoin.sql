@@ -3,13 +3,13 @@
 
 
 use master;
-drop database loja;
+drop database revisao;
 go
 
-create database loja;
+create database revisao;
 go
 
-use loja;
+use revisao;
 
 create table produtos(
 	idProdutos int primary key not null identity(1,1),
