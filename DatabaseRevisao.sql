@@ -25,7 +25,8 @@ go
 
 create table vendas(
 	idVenda int primary key not null identity(1,1),
-	idCliente int not null
+	idCliente int not null,
+	Cancelado int
 );
 go
 
@@ -37,27 +38,26 @@ create table itensVendidos(
 go
 
 create table vendasCanceladas(
-	idVendaCancelada int unique not null
+	idVendaCancelada int  not null,
+	data date
 );
-go
+GO	
 
-alter table vendas 
-	add constraint fkVendaCliente
-	foreign key(idCliente) references clientes(idCliente);
+CREATE TRIGGER BANCOTRIGGER On vendas
+FOR INSERT AS  
+DECLARE @idVenda int;
+DECLARE @idVendaCancelada int;
 
-alter table itensVendidos 
-	add constraint fkProduto
-	foreign key(idProdutos) references produtos(idProdutos);
+DECLARE @audit_action varchar(200);
 
-alter table itensVendidos
-	add constraint fkVenda
-	foreign key(idVenda) references vendas(idVenda);
-go
+SELECT @idVendaCancelada = i.idVendaCancelada FROM inserted i;
 
-alter table vendasCanceladas
-	add constraint fkVendaCancelada
-	foreign key(idVendaCancelada) references vendas(idVenda);
-go
+SET @audit_action='Registrado com Sucesso!';
+
+INSERT INTO tb_vendasCanceladas (idVendaCancelada,data)VALUES (@idVendaCancelada, GETDATE());
+
+PRINT 'Venda Cancelada'
+GO
 
 insert into clientes values
 ('Beyonce'),
@@ -79,11 +79,11 @@ insert into produtos values
 go
 
 insert into vendas values
-(1),
-(2),
-(3),
-(4),
-(5);
+(1,0),
+(2,0),
+(3,1),
+(4,1),
+(5,0);
 go
 
 insert into itensVendidos values
@@ -94,36 +94,10 @@ insert into itensVendidos values
 (5,2);
 go
 
-insert into vendasCanceladas values
-(2),
-(5);
 go
 
-select * from itensVendidos;
-select * from clientes;
-select * from vendas;
 
-select v.idVenda, v.idCliente, c.nomeCliente 
-	from vendas as v 
-	inner join clientes as c 
-	on c.idCliente = v.idCliente;
-go	
-
-select v.idItemVenda, v.idVenda, v.idProdutos, p.nomeProduto 
-	from itensVendidos as v
-	inner join produtos as p
-	on v.idProdutos = p.idProdutos;
-go
-
-select c.idCliente, c.nomeCliente
-	from clientes as c  
-	left join vendas as v
-	on  c.idCliente = v.idCliente where v.idVenda is null;
-go
-
-select v.idProdutos, p.nomeProduto 
-	from itensVendidos as v
-	right join produtos as p
-	on v.idProdutos = p.idProdutos --where v.idVenda is null;	
- go
+SELECT * FROM vendas;
+SELECT * FROM vendasCanceladas;
+GO
 
