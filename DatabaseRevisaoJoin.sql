@@ -36,10 +36,6 @@ create table itensVendidos(
 );
 go
 
-create table vendasCanceladas(
-	idVendaCancelada int unique not null
-);
-go
 
 alter table vendas 
 	add constraint fkVendaCliente
@@ -54,10 +50,6 @@ alter table itensVendidos
 	foreign key(idVenda) references vendas(idVenda);
 go
 
-alter table vendasCanceladas
-	add constraint fkVendaCancelada
-	foreign key(idVendaCancelada) references vendas(idVenda);
-go
 
 insert into clientes values
 ('Beyonce'),
@@ -87,43 +79,51 @@ insert into vendas values
 go
 
 insert into itensVendidos values
-(1,5),
-(2,4),
-(3,3),
-(4,2),
+(1,1),
+(1,1),
+(2,1),
+(2,3),
 (5,2);
 go
-
-insert into vendasCanceladas values
-(2),
-(5);
-go
-
-select * from itensVendidos;
-select * from clientes;
-select * from vendas;
-
-select v.idVenda, v.idCliente, c.nomeCliente 
-	from vendas as v 
-	inner join clientes as c 
-	on c.idCliente = v.idCliente;
-go	
 
 select v.idItemVenda, v.idVenda, v.idProdutos, p.nomeProduto 
 	from itensVendidos as v
 	inner join produtos as p
 	on v.idProdutos = p.idProdutos;
 go
-
-select c.idCliente, c.nomeCliente
-	from clientes as c  
-	left join vendas as v
-	on  c.idCliente = v.idCliente where v.idVenda is null;
+----------------------------------------------------------------------------------------------------------
+--Criando Procedure 
+create procedure aplica_desconto_no_preco(
+	@id_do_cliente as decimal(10),
+	@_preco as decimal(10, 2),
+	@_percentual_desconto as decimal(10, 2) = 0.0,
+	@_preco_com_desconto as decimal(10, 2) output,
+	@nome_do_produto as varchar(15) output
+)
+as
+	begin
+		select @_preco_com_desconto = @_preco - (@_preco * @_percentual_desconto)
+		select @_preco_com_desconto as "Preco com desconto"
+	end
 go
 
-select v.idProdutos, p.nomeProduto 
-	from itensVendidos as v
-	right join produtos as p
-	on v.idProdutos = p.idProdutos --where v.idVenda is null;	
- go
+declare @NomeProduto varchar(20);
+declare @IdCliente int;
+declare @Preco decimal(5,2);
+declare @PercentualDeDesconto decimal(5,2);
+declare @PrecoComDesconto decimal(5,2);
+set @NomeProduto = 'DVD BEYONCE';
+set @IdCliente = 1;
+set @Preco =100;
+set @PercentualDeDesconto = 0.5;
+
+exec aplica_desconto_no_preco @IdCliente, @Preco, @PercentualDeDesconto, @PrecoComDesconto output, @NomeProduto output
+--print 'resultado da procedure:'
+--print 'valor atribuido para @precoComDesconto'
+select @PrecoComDesconto as "Valor da variavel: @PrecoComDesconto"
+select @NomeProduto as "Nome do produto q houve desconto:"
+select @IdCliente as "Id do cliente que comprou:"
+
+drop procedure aplica_desconto_no_preco
+go
 
